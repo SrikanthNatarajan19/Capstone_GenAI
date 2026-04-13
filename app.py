@@ -9,6 +9,13 @@ from evaluator import get_memory_usage_mb, token_f1_score, rouge_scores
 
 
 st.set_page_config(page_title="Academic QA Assistant", layout="wide")
+st.info("""
+How to use this app:
+1. Upload a PDF or paste text
+2. Click 'Process Document'
+3. Ask a question or generate a summary
+4. Review retrieved chunks and evaluation metrics
+""")
 
 
 @st.cache_resource
@@ -101,6 +108,10 @@ def main():
 
             retrieval_start = time.perf_counter()
             results = retriever.retrieve(question, top_k=top_k)
+            if not results or results[0]['score'] < 0.20:
+                st.subheader("Generated Answer")
+                st.write("Answer not found in the provided document.")
+                return
             retrieval_time = time.perf_counter() - retrieval_start
 
             contexts = [r["text"] for r in results]

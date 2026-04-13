@@ -10,25 +10,30 @@ class AnswerGenerator:
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
     def build_qa_prompt(self, question: str, contexts):
-        """
-        Build a grounded QA prompt using retrieved chunks.
-        """
         joined_context = "\n\n".join(
             [f"Context {i+1}: {ctx}" for i, ctx in enumerate(contexts)]
         )
 
         prompt = f"""
-Answer the question using only the provided context.
-If the answer is not present in the context, say: "Answer not found in the provided document."
+    You are a document question-answering assistant.
 
-Context:
-{joined_context}
+    Answer only using the provided context.
 
-Question:
-{question}
+    Rules:
+    - Do not use outside knowledge.
+    - If the answer is not clearly present, say: "Answer not found in the provided document."
+    - For procedural or setup questions, provide numbered steps.
+    - For factual questions, answer in 2-5 clear sentences.
+    - Be specific and avoid one-word answers.
 
-Answer:
-"""
+    Context:
+    {joined_context}
+
+    Question:
+    {question}
+
+    Answer:
+    """
         return prompt.strip()
 
     def build_summary_prompt(self, text: str):
@@ -57,11 +62,12 @@ Summary:
         )
 
         outputs = self.model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=False
-        )
-
+        **inputs,
+        max_new_tokens=max_new_tokens,
+        do_sample=False,
+        num_beams=4,
+        early_stopping=True
+    )
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     def answer_question(self, question: str, contexts):

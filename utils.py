@@ -37,10 +37,10 @@ def clean_text(text: str) -> str:
     return cleaned
 
 
-def chunk_text(text: str, chunk_size: int = 500, overlap: int = 100):
+def chunk_text(text: str, chunk_size: int = 700, overlap: int = 120):
     """
-    Split text into overlapping chunks.
-    Character-based chunking keeps it simple and explainable.
+    Split text into overlapping chunks, trying to end on sentence boundaries
+    when possible.
     """
     if not text:
         return []
@@ -51,12 +51,21 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 100):
 
     while start < text_len:
         end = min(start + chunk_size, text_len)
-        chunk = text[start:end]
-        chunks.append(chunk)
+
+        if end < text_len:
+            period_pos = text.rfind(".", start, end)
+            newline_pos = text.rfind("\n", start, end)
+            split_pos = max(period_pos, newline_pos)
+            if split_pos > start + 100:
+                end = split_pos + 1
+
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
 
         if end == text_len:
             break
 
-        start += chunk_size - overlap
+        start = max(end - overlap, start + 1)
 
     return chunks
