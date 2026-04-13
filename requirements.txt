@@ -1,0 +1,10 @@
+streamlit
+transformers
+torch
+sentence-transformers
+faiss-cpu
+pypdf
+numpy
+scikit-learn
+rouge-score
+psutil

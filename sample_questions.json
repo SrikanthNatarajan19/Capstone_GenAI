@@ -1,0 +1,22 @@
+[
+  {
+    "question": "What is the main objective of the project?",
+    "expected_answer": "To develop a user-friendly web application for academic question answering and content summarization using an LLM integrated with RAG."
+  },
+  {
+    "question": "Which model is used for answer generation?",
+    "expected_answer": "FLAN-T5-base."
+  },
+  {
+    "question": "Which method is used for semantic search?",
+    "expected_answer": "FAISS with sentence-transformer embeddings."
+  },
+  {
+    "question": "What is the purpose of chunking the document?",
+    "expected_answer": "To split the document into smaller retrievable pieces for semantic search and grounded generation."
+  },
+  {
+    "question": "How will the system be deployed?",
+    "expected_answer": "Using Streamlit."
+  }
+]
