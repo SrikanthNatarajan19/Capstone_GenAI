@@ -61,3 +61,36 @@ def rouge_scores(reference: str, generated: str):
         "rouge2": scores["rouge2"].fmeasure,
         "rougeL": scores["rougeL"].fmeasure
     }
+
+
+def answer_grounded_in_context(answer: str, contexts, min_overlap_tokens: int = 5) -> bool:
+    """
+    Simple grounding heuristic:
+    checks whether the answer shares enough normalized tokens
+    with any retrieved context.
+    """
+    answer_tokens = set(normalize_text(answer).split())
+
+    for ctx in contexts:
+        ctx_tokens = set(normalize_text(ctx).split())
+        overlap = answer_tokens & ctx_tokens
+        if len(overlap) >= min_overlap_tokens:
+            return True
+
+    return False
+
+
+def retrieval_hit_at_k(results, expected_answer: str) -> int:
+    """
+    Returns 1 if any retrieved chunk contains enough overlap
+    with the expected answer, else 0.
+    """
+    expected_tokens = set(normalize_text(expected_answer).split())
+
+    for item in results:
+        chunk_tokens = set(normalize_text(item["text"]).split())
+        overlap = expected_tokens & chunk_tokens
+        if len(overlap) >= 3:
+            return 1
+
+    return 0

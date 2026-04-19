@@ -1,3 +1,4 @@
+import re
 from pypdf import PdfReader
 
 
@@ -22,50 +23,76 @@ def extract_text_from_pdf(uploaded_file) -> str:
 
 def clean_text(text: str) -> str:
     """
-    Basic text cleaning:
-    - remove extra spaces
-    - remove extra newlines
+    Basic text cleaning for academic documents.
     """
     if not text:
         return ""
 
     text = text.replace("\r", "\n")
+    text = re.sub(r"\n+", "\n", text)
+    text = re.sub(r"[ \t]+", " ", text)
+
     lines = [line.strip() for line in text.split("\n")]
     lines = [line for line in lines if line]
+
     cleaned = " ".join(lines)
-    cleaned = " ".join(cleaned.split())
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
     return cleaned
 
 
-def chunk_text(text: str, chunk_size: int = 700, overlap: int = 120):
+def split_into_sentences(text: str):
     """
-    Split text into overlapping chunks, trying to end on sentence boundaries
-    when possible.
+    Simple sentence splitter suitable for academic prose.
     """
     if not text:
         return []
 
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    return [s.strip() for s in sentences if s.strip()]
+
+
+def chunk_text(text: str, chunk_size: int = 700, overlap: int = 120):
+    """
+    Split text into overlapping chunks using sentence-aware grouping.
+    This is better than raw character slicing for academic text.
+    """
+    if not text:
+        return []
+
+    sentences = split_into_sentences(text)
+    if not sentences:
+        return []
+
     chunks = []
-    start = 0
-    text_len = len(text)
+    current_chunk = ""
+    current_len = 0
 
-    while start < text_len:
-        end = min(start + chunk_size, text_len)
+    for sentence in sentences:
+        sent_len = len(sentence)
 
-        if end < text_len:
-            period_pos = text.rfind(".", start, end)
-            newline_pos = text.rfind("\n", start, end)
-            split_pos = max(period_pos, newline_pos)
-            if split_pos > start + 100:
-                end = split_pos + 1
+        if current_len + sent_len + 1 <= chunk_size:
+            if current_chunk:
+                current_chunk += " " + sentence
+            else:
+                current_chunk = sentence
+            current_len = len(current_chunk)
+        else:
+            if current_chunk:
+                chunks.append(current_chunk.strip())
 
-        chunk = text[start:end].strip()
-        if chunk:
-            chunks.append(chunk)
+            # build overlap from end of previous chunk
+            if overlap > 0 and chunks:
+                prev_chunk = chunks[-1]
+                overlap_text = prev_chunk[-overlap:] if len(prev_chunk) > overlap else prev_chunk
+                current_chunk = overlap_text.strip() + " " + sentence
+            else:
+                current_chunk = sentence
 
-        if end == text_len:
-            break
+            current_chunk = current_chunk.strip()
+            current_len = len(current_chunk)
 
-        start = max(end - overlap, start + 1)
+    if current_chunk:
+        chunks.append(current_chunk.strip())
 
     return chunks

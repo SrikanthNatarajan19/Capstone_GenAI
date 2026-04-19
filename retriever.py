@@ -3,7 +3,8 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 
-EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+# Stronger embedding model than MiniLM for academic retrieval
+EMBED_MODEL_NAME = "BAAI/bge-base-en-v1.5"
 
 
 class SemanticRetriever:
@@ -22,11 +23,11 @@ class SemanticRetriever:
 
         self.chunks = chunks
 
-        embeddings = self.model.encode(chunks, convert_to_numpy=True)
-        embeddings = embeddings.astype("float32")
-
-        # Normalize for cosine similarity using inner product
-        faiss.normalize_L2(embeddings)
+        embeddings = self.model.encode(
+            chunks,
+            convert_to_numpy=True,
+            normalize_embeddings=True
+        ).astype("float32")
 
         dim = embeddings.shape[1]
         index = faiss.IndexFlatIP(dim)
@@ -35,7 +36,7 @@ class SemanticRetriever:
         self.index = index
         self.embeddings = embeddings
 
-    def retrieve(self, query: str, top_k: int = 3):
+    def retrieve(self, query: str, top_k: int = 5):
         """
         Retrieve top-k most similar chunks for a query.
         Returns list of dicts with chunk text, score, and index.
@@ -43,9 +44,11 @@ class SemanticRetriever:
         if self.index is None:
             raise ValueError("FAISS index is not built yet.")
 
-        query_embedding = self.model.encode([query], convert_to_numpy=True)
-        query_embedding = query_embedding.astype("float32")
-        faiss.normalize_L2(query_embedding)
+        query_embedding = self.model.encode(
+            [query],
+            convert_to_numpy=True,
+            normalize_embeddings=True
+        ).astype("float32")
 
         scores, indices = self.index.search(query_embedding, top_k)
 

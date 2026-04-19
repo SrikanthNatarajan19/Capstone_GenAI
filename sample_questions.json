@@ -1,22 +1,26 @@
 [
   {
-    "question": "What is the main objective of the project?",
-    "expected_answer": "To develop a user-friendly web application for academic question answering and content summarization using an LLM integrated with RAG."
+    "question": "What is machine learning?",
+    "expected_answer": "Machine learning is a subfield of artificial intelligence that focuses on developing algorithms capable of learning patterns from data without explicit programming."
   },
   {
-    "question": "Which model is used for answer generation?",
-    "expected_answer": "FLAN-T5-base."
+    "question": "What is supervised learning?",
+    "expected_answer": "Supervised learning is a machine learning paradigm in which models are trained using labeled datasets where input-output pairs are known."
   },
   {
-    "question": "Which method is used for semantic search?",
-    "expected_answer": "FAISS with sentence-transformer embeddings."
+    "question": "What is unsupervised learning?",
+    "expected_answer": "Unsupervised learning operates on unlabeled data and seeks to discover hidden structures or distributions, often through clustering or dimensionality reduction."
   },
   {
-    "question": "What is the purpose of chunking the document?",
-    "expected_answer": "To split the document into smaller retrievable pieces for semantic search and grounded generation."
+    "question": "What is reinforcement learning?",
+    "expected_answer": "Reinforcement learning involves an agent interacting with an environment and learning optimal policies through reward signals."
   },
   {
-    "question": "How will the system be deployed?",
-    "expected_answer": "Using Streamlit."
+    "question": "What is overfitting and how can it be prevented?",
+    "expected_answer": "Overfitting occurs when a model learns noise or irrelevant details from training data, leading to poor generalization. It can be mitigated using regularization, cross-validation, and data augmentation."
+  },
+  {
+    "question": "What is generalization in machine learning?",
+    "expected_answer": "Generalization refers to a model’s ability to perform well on unseen data."
   }
 ]
