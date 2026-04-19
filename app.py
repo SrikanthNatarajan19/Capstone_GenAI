@@ -43,7 +43,7 @@ def load_sample_questions():
 
 
 def main():
-    st.title("Academic Question Answering using RAG + FLAN-T5 Large")
+    st.title("Academic Assistant using RAG + FLAN-T5 Large")
     st.write("Upload a PDF or paste academic text, then ask questions grounded in the document.")
 
     retriever = load_retriever()
