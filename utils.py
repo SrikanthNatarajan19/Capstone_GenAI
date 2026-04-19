@@ -52,10 +52,10 @@ def split_into_sentences(text: str):
     return [s.strip() for s in sentences if s.strip()]
 
 
-def chunk_text(text: str, chunk_size: int = 700, overlap: int = 120):
+def chunk_text(text: str, chunk_size: int = 220, overlap: int = 40):
     """
     Split text into overlapping chunks using sentence-aware grouping.
-    This is better than raw character slicing for academic text.
+    Smaller chunks improve retrieval precision for short academic passages.
     """
     if not text:
         return []
@@ -81,15 +81,15 @@ def chunk_text(text: str, chunk_size: int = 700, overlap: int = 120):
             if current_chunk:
                 chunks.append(current_chunk.strip())
 
-            # build overlap from end of previous chunk
             if overlap > 0 and chunks:
                 prev_chunk = chunks[-1]
-                overlap_text = prev_chunk[-overlap:] if len(prev_chunk) > overlap else prev_chunk
-                current_chunk = overlap_text.strip() + " " + sentence
+                # Split by words to avoid cutting characters in half
+                prev_words = prev_chunk.split()
+                overlap_text = " ".join(prev_words[-overlap:]) if len(prev_words) > overlap else prev_chunk
+                current_chunk = (overlap_text.strip() + " " + sentence).strip()
             else:
-                current_chunk = sentence
+                current_chunk = sentence.strip()
 
-            current_chunk = current_chunk.strip()
             current_len = len(current_chunk)
 
     if current_chunk:

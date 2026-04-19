@@ -43,7 +43,7 @@ def load_sample_questions():
 
 
 def main():
-    st.title("Academic Question Answering using RAG + FLAN-T5")
+    st.title("Academic Question Answering using RAG + FLAN-T5 Large")
     st.write("Upload a PDF or paste academic text, then ask questions grounded in the document.")
 
     retriever = load_retriever()
@@ -57,9 +57,9 @@ def main():
         st.session_state.index_built = False
 
     st.sidebar.header("Settings")
-    chunk_size = st.sidebar.slider("Chunk Size", 300, 1200, 700, 50)
-    overlap = st.sidebar.slider("Chunk Overlap", 50, 300, 120, 10)
-    top_k = st.sidebar.slider("Top-K Retrieval", 1, 8, 5, 1)
+    chunk_size = st.sidebar.slider("Chunk Size", 200, 1000, 500, 50)
+    overlap = st.sidebar.slider("Chunk Overlap", 0, 200, 20, 10)
+    top_k = st.sidebar.slider("Top-K Retrieval", 1, 8, 2, 1)
     min_score_threshold = st.sidebar.slider("Minimum Retrieval Score", 0.0, 1.0, 0.25, 0.01)
 
     uploaded_pdf = st.file_uploader("Upload PDF", type=["pdf"])
@@ -129,10 +129,13 @@ def main():
                 st.write("Answer not found in the provided document.")
                 return
 
-            contexts = [r["text"] for r in filtered_results]
+            filtered_results = sorted(filtered_results, key=lambda x: x["score"], reverse=True)
+            contexts = [r["text"] for r in filtered_results[:top_k]]
 
             generation_start = time.perf_counter()
             answer = generator.answer_question(question, contexts)
+            # if len(answer.split()) < 5:
+            #     answer = "Answer not found in the provided document."
             generation_time = time.perf_counter() - generation_start
 
             total_time = retrieval_time + generation_time
@@ -189,7 +192,9 @@ def main():
 
                 results = retriever.retrieve(q, top_k=top_k)
                 filtered_results = [r for r in results if r["score"] >= min_score_threshold]
-                contexts = [r["text"] for r in filtered_results]
+                # sort by score and keep top 2 ONLY
+                filtered_results = sorted(filtered_results, key=lambda x: x["score"], reverse=True)
+                contexts = [r["text"] for r in filtered_results[:2]]
 
                 if contexts:
                     generated = generator.answer_question(q, contexts)

@@ -1,58 +1,29 @@
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import torch
 
 
-LLM_NAME = "google/flan-t5-base"
+LLM_NAME = "google/flan-t5-large"
 
 
 class AnswerGenerator:
     def __init__(self, model_name: str = LLM_NAME):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        self.model.to(self.device)
 
     def build_qa_prompt(self, question: str, contexts):
         joined_context = "\n\n".join(
             [f"Context {i + 1}: {ctx}" for i, ctx in enumerate(contexts)]
         )
 
-        prompt = f"""
-You are an academic document question-answering assistant.
+        prompt = f"""Answer the question in a complete, grammatically correct sentence based only on the provided context. If the answer is not in the context, say "Answer not found in the provided document."
 
-Answer only using the provided context.
+        Context:
+        {joined_context}
 
-Strict rules:
-1. Do not use outside knowledge.
-2. If the answer is not clearly supported by the context, say exactly:
-   "Answer not found in the provided document."
-3. Combine relevant information from multiple contexts when needed.
-4. For definition/explanation questions, structure the answer as:
-   - Definition
-   - Explanation
-   - Key details / prevention / implications
-5. Use complete sentences.
-6. Be precise and concise.
-7. Quote short exact phrases from the context when useful, but do not copy long passages.
-
-Context:
-{joined_context}
-
-Question:
-{question}
-
-Answer:
-"""
-        return prompt.strip()
-
-    def build_summary_prompt(self, text: str):
-        prompt = f"""
-Summarize the following academic content clearly and concisely in 5-7 sentences.
-Focus on the core concepts, major ideas, and important technical points.
-Do not add outside information.
-
-Text:
-{text}
-
-Summary:
-"""
+        Question: {question}
+        Answer:"""
         return prompt.strip()
 
     def generate_text(self, prompt: str, max_new_tokens: int = 180):
@@ -61,15 +32,17 @@ Summary:
             return_tensors="pt",
             truncation=True,
             max_length=1024
-        )
+        ).to(self.device)
 
         outputs = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
             do_sample=False,
-            num_beams=4,
-            early_stopping=True,
-            no_repeat_ngram_size=3
+            # num_beams=5,
+            # early_stopping=True,
+            # no_repeat_ngram_size=3,
+            # min_length=20,
+            # length_penalty=1.2
         )
 
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
